@@ -1,17 +1,19 @@
 require 'redmine'
-require 'macros'
-require 'concerns/knowledgebase_project_extension'
-require 'helpers/knowledgebase_link_helper'
-require 'helpers/knowledgebase_settings_helper'
+require File.expand_path('../lib/macros', __FILE__)
+require File.expand_path('../lib/concerns/knowledgebase_project_extension', __FILE__)
+require File.expand_path('../lib/helpers/knowledgebase_link_helper', __FILE__)
+require File.expand_path('../lib/helpers/knowledgebase_settings_helper', __FILE__)
 
-Project.send :include, KnowledgebaseProjectExtension
-SettingsHelper.send :include, KnowledgebaseSettingsHelper
+Project.send :include, Concerns::KnowledgebaseProjectExtension
+SettingsHelper.send :include, Helpers::KnowledgebaseSettingsHelper
 ApplicationHelper.send :include, RedmineCrm::TagsHelper
 
-Rails.configuration.to_prepare do
+prepare = lambda do
   Redmine::Activity.register :kb_articles
   Redmine::Search.available_search_types << 'kb_articles'
 end
+prepare.call if Redmine.const_defined?(:PluginLoader)
+Rails.configuration.to_prepare(&prepare)
 
 Redmine::Plugin.register :redmine_knowledgebase do
   name        'Knowledgebase'

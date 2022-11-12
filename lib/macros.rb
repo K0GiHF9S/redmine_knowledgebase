@@ -1,5 +1,5 @@
-require 'helpers/knowledgebase_link_helper'
-include KnowledgebaseLinkHelper
+require File.expand_path('../helpers/knowledgebase_link_helper', __FILE__)
+include Helpers::KnowledgebaseLinkHelper
 
 module Macros
 

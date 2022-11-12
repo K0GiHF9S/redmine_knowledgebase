@@ -1,6 +1,6 @@
-require 'acts_as_viewed'
-require 'acts_as_rated'
-require 'acts_as_versioned'
+require File.expand_path('../../../lib/acts_as_viewed', __FILE__)
+require File.expand_path('../../../lib/acts_as_rated', __FILE__)
+require File.expand_path('../../../lib/acts_as_versioned', __FILE__)
 require 'diff'
 
 class KbArticle < ActiveRecord::Base

@@ -9,7 +9,11 @@ class CategoriesController < ApplicationController
 
   before_action :find_project_by_project_id, :authorize
   before_action :get_category, :only => [:show, :edit, :update, :destroy, :index]
-  accept_rss_auth :show
+  if self.respond_to?(:accept_atom_auth)
+    accept_atom_auth :show
+  else
+    accept_rss_auth :show
+  end
 
   rescue_from ActiveRecord::RecordNotFound, :with => :force_404
 
