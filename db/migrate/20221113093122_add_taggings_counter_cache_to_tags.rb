@@ -1,5 +1,6 @@
 class AddTaggingsCounterCacheToTags < Rails.version < '5.1' ? ActiveRecord::Migration : ActiveRecord::Migration[4.2]
   def self.up
+    add_column :tags, :taggings_count, :integer, default: 0
     RedmineCrm::Tag.reset_column_information
     RedmineCrm::Tag.find_each do |tag|
       RedmineCrm::Tag.reset_counters(tag.id, :taggings)
