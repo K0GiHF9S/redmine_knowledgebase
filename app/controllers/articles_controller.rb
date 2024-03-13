@@ -10,6 +10,7 @@ class ArticlesController < ApplicationController
 
   before_action :find_project_by_project_id, :authorize
   before_action :get_article, :except => [:index, :new, :create, :preview, :comment, :tagged, :rate, :authored]
+  before_action :find_attachments, :only => [:preview]
 
   rescue_from ActionView::MissingTemplate, :with => :force_404
   rescue_from ActiveRecord::RecordNotFound, :with => :force_404
@@ -40,14 +41,14 @@ class ArticlesController < ApplicationController
   def authored
 
     @author_id = params[:author_id]
-    @articles = KbArticle.where(id: @project.articles.where(:author_id => @author_id).pluck(&:id))
+    @articles = KbArticle.where('kb_articles.id in (?)', @project.articles.where(:author_id => @author_id).pluck(:id))
                          .order("#{KbArticle.table_name}.#{sort_column} #{sort_direction}")
 
     if params[:tag]
       @tag = params[:tag]
       @tag_array = *@tag.split(',')
       @tag_hash = Hash[ @tag_array.map{ |tag| [tag.downcase, 1] } ]
-      @articles = KbArticle.where(id: @articles.tagged_with(@tag).map(&:id))
+      @articles = KbArticle.where('kb_articles.id in (?)', @articles.tagged_with(@tag).map(&:id))
     end
 
     @tags = @articles.tag_counts.sort { |a, b| a.name.downcase <=> b.name.downcase }
@@ -129,6 +130,8 @@ class ArticlesController < ApplicationController
 
     @categories=@project.categories.all
 
+    # @page is used when using redmine_wysiwyg_editor plugin to show added attachments in menu
+    @page = @article 
     # don't keep previous comment
     @article.version_comments = nil
     @article.version = params[:version]
@@ -224,9 +227,17 @@ class ArticlesController < ApplicationController
   end
 
   def preview
-    @summary = (params[:article] ? params[:article][:summary] : nil)
-    @content = (params[:article] ? params[:article][:content] : nil)
-    render :layout => false
+    @article = @project.articles.find_by(id: params[:id])
+
+    # page is nil when previewing a new page
+    return render_403 unless @article.nil? || @article.editable_by?(User.current)
+
+    if @article
+      @attachments += @article.attachments
+      @previewed = @article
+    end
+    @text = params[:article].present? ? params[:article][:text] : params[:text]
+    render :partial => 'common/preview'
   end
 
   def comment
